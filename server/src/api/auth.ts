@@ -1,5 +1,7 @@
-import { Request , Response , Router } from "express";
+import { Request , Response , Router  , NextFunction, ErrorRequestHandler} from "express";
 import { checkUnique, createUser } from "../services/registration";
+import { generateOTPFunc, OTPVerifier, sendOtpEmail } from "../services/otpVerifier";
+import { redisClient } from "../config/db";
 const router = Router();
 
 export interface RegisterRequestBody {
@@ -36,8 +38,54 @@ router.post('/register' , async (req: Request , res : Response) :  Promise<void>
 })
 
 
-router.post('/login' , async (req: Request , res : Response) :  Promise<void> =>{
-    const {} = req.body ;
+router.post('/login' , async (req: Request , res : Response , next : NextFunction) :  Promise<void> =>{
+    const {email} = req.body ;
+    const otp = generateOTPFunc()
+    if(!email){
+      res.status(400).json({msg : "please enter the mail you want to login from , no mail recieved by the backend"})
+      return;
+    }
+    sendOtpEmail(email , otp);
+    //now here we will need to store this otp in redis with a TTL of 120 seconds and then we can call it and destroy it
+    await redisClient?.set(`otp:${email}` , otp , "EX" , 120);
+    console.log(`otp sent to email ${email}  , otp : ${otp}`);
+
+    res.status(200).json({msg : "the otp has been sent "});
+    
+
 })
 
-export default router ;
+
+router.post('/verify', async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { email, otp } = req.body;
+        console.log(`Verification attempt for email: ${email} with OTP: ${otp}`);
+
+        if (!email || !otp) {
+             res.status(400).json({ msg: "Email and OTP must be provided." });
+             return;
+        }
+
+
+        const redisOtpPromise = redisClient?.get(`otp:${email}`);
+
+        const isVerified = await OTPVerifier(otp, redisOtpPromise);
+
+        if (isVerified) {
+            console.log(`OTP verified successfully for ${email}`);
+            
+            await redisClient?.del(`otp:${email}`);
+            
+            res.status(200).json({ msg: "Verification successful!" });
+        } else {
+            console.log(`OTP verification failed for ${email}`);
+            
+            res.status(401).json({ msg: "Invalid or expired OTP." });
+        }
+
+    } catch (error) {
+        console.error("An unexpected error occurred during OTP verification:", error);
+        res.status(500).json({ msg: "Internal Server Error" });
+    }
+});
+export default router  ;
