@@ -5,7 +5,6 @@ dotenv.config();
 
 
 const REDIS= process.env.REDIS 
-console.log(REDIS);
 export const prisma = new PrismaClient();
 let rediss ;
 // const client = new Redis(REDIS)
