@@ -41,25 +41,6 @@ router.post('/register' , async (req: Request , res : Response) :  Promise<void>
 
 router.post('/login' , async (req: Request , res : Response , next : NextFunction) :  Promise<void> =>{
     const {email} = req.body ;
-    //check if JWT exists if it doesnt then we go ahead , use try catch and make JWT when user logs in successfully
-    try {
-      console.log("we are here");
-      //check from redis too 
-      const jwt = await redisClient?.get(`session:${email}`);
-      console.log(jwt);
-      
-      if(jwt){
-        console.log("we are here");
-        const checkSecret = await checkJWT(jwt , email);
-        if(checkSecret){
-          res.status(200).json({msg : "you have successfully logged in using JWT Sessions"})
-          return;
-        }
-      }
-    }
-    catch(e){
-      console.log(e);
-    }
     const otp = generateOTPFunc()
     if(!email){
       res.status(400).json({msg : "please enter the mail you want to login from , no mail recieved by the backend"})

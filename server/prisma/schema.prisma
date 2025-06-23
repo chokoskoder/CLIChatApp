@@ -15,11 +15,8 @@ datasource db {
 
 model User {
   id        String   @id @default(uuid())
-  username  String   @unique
   email     String @unique
   publicKey String   @map("public_key")
-  encryptedPrivateKey String @map("encrypted_private_key")
-  passwordSalt String  @map("password_salt")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
