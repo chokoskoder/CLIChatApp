@@ -7,6 +7,8 @@ import { userInfo } from "os";
 // authentication is not perfect , it can be intercepted --> i think we need to use the IP addresses here so that people can't impersonate the user 
 
 const onlineUsers = new Map<string , string>();
+//this is not good logic we need to use Redis and that too inMemory this time --> Update this to inMemory storage with a ttl which will be equal to the ttl of JWT key 
+//stored on the upstash redis server
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;

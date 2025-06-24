@@ -1,6 +1,7 @@
 import * as readline from 'readline';
 // Making sure the import path is correct for your project structure
 import { handleLogin, handleRegister, handleVerification } from './services/commands';
+import { connectWebSocket } from './services/communication';
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -31,6 +32,8 @@ rl.on('line', async (line: string) => { // Added 'async'
       case '/verify':
         await handleVerification(args[0], args[1]);
         break; // Added the missing 'break'
+      case '/connect':
+        await connectWebSocket(args[0]);
       case '/help':
         console.log("Available commands: /register, /login, /verify <email> <otp>, /exit");
         break;

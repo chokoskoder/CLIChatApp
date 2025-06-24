@@ -27,7 +27,7 @@ export async function protectJWTSignInKey(jwtPasskey : string) {
     //store and save the json web token
 }
 
-export async function useProtectedJWTSignInKey(email : string) : Promise<string>{
+// export async function useProtectedJWTSignInKey(email : string) : Promise<string>{
 
-    //return the decoded key from here
-}
+//     //return the decoded key from here
+// }

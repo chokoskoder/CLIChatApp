@@ -89,6 +89,7 @@ router.post('/verify', async (req: Request, res: Response): Promise<void> => {
             const redisKey = `session:${email}`
             const jwt = await createJWT(email);
             JSON.stringify(jwt);
+            console.log(jwt);
             await redisClient?.set(redisKey , jwt , "EX" , 86400  );
             
             await redisClient?.del(`otp:${email}`);
