@@ -17,6 +17,17 @@ export async function generateIdentityKeyPair() : Promise<CryptoKeyPair>{
     return keyPair;
 }
 
+export async function importPublicKey(key : JsonWebKey) : Promise<CryptoKey> {
+    const privateKey = await webcrypto.subtle.importKey(
+        "jwk",
+        key , 
+        {name : "ECDH" ,  namedCurve : "P-256"},
+        true , 
+        ["deriveKey"]
+    )
+    return privateKey;
+}
+
 
 export async function exportPublicKey(key : CryptoKey) : Promise<JsonWebKey>{
     const exportedKey = await webcrypto.subtle.exportKey("jwk" , key);
