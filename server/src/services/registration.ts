@@ -4,7 +4,7 @@
 import { prisma } from "../config/db"
 
 
-export async function checkUnique(mail: string) : Promise<boolean> {
+export async function checkAlreadyExistOrNot(mail: string) : Promise<boolean> {
 const user = await prisma.user.findUnique({
   where: {
     email: mail,
@@ -21,20 +21,13 @@ const user = await prisma.user.findUnique({
 
 
 
-export async function createUser(    username : string,
-    publicKey : object,  //JWK format 
-    encryptedPrivateKey : string, 
-    passwordSalt : string,
-    mail : string) : Promise<any>{
+export async function createUser(publicKey : object,  mail : string) : Promise<any>{
     
         const newPublicKey = JSON.stringify(publicKey); // remember to jsonify it back when called from backend in the frontend
         const createUser = await prisma.user.create({
             data : {
-                username : username , 
                 email : mail , 
                 publicKey  : newPublicKey,
-                encryptedPrivateKey : encryptedPrivateKey,
-                passwordSalt : passwordSalt 
             },
         })
 

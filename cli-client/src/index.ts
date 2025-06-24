@@ -23,7 +23,7 @@ rl.on('line', async (line: string) => { // Added 'async'
   try { // Added try...catch for robust error handling
     switch (command) {
       case '/register':
-        await handleRegister();
+        await handleRegister(args[0]);
         break;
       case '/login':
         await handleLogin(args[0]);

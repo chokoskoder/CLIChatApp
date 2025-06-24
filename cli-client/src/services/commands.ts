@@ -1,11 +1,36 @@
 import axios from "axios";
+import { generateIdentityKeyPair } from "./encryption";
 interface ApiResponse {
     msg : string;
 }
+interface ApiErrorResponse {
+    msg : string;
+}
 
-export async function handleRegister(){
+
+export async function handleRegister(email : string ){
     console.log("starting the registration process....");
-    const posting = await axios.post("http://localhost:8454/api/auth/register")   
+    try{
+        console.log("generating key pair for e2e encryption....");
+        //we need to put some kind of blocking here so that the user cant create keypairs again and again 
+        const keyPair = await generateIdentityKeyPair(); // put this into if public key doesnt exist only then we make a new pair , but a user wont go through all the struggle to register again and again would he ?
+        const  { privateKey , publicKey } =  keyPair;
+        const posting = await axios.post<ApiResponse>("http://localhost:8454/api/auth/register" , {
+            email : email , 
+            publicKey : publicKey
+        })//we need to send a JSON  payload here with all the things we need while registering a user right ?
+        .then((response)=>{
+            console.log(response.data.msg)
+        })
+        .catch((e)=>{
+          console.log(e.response.data.msg);  
+        })
+ 
+    }
+    catch(error){
+        console.log("we encountered some error please try again");
+    }
+
 }
 export async function handleLogin(email : string){
     console.log("strating the log in process....");
@@ -13,9 +38,12 @@ export async function handleLogin(email : string){
         const response = await axios.post<ApiResponse>("http://localhost:8454/api/auth/login" , {
         email : email
     })
-        const message = response.data.msg;
-        console.log(message);
-        console.log("to login using OTP please type /verify example@gmail.com otp , in the specified order");
+        .then((response)=>{
+            console.log(response.data.msg)
+        })
+        .catch((e)=>{
+          console.log(e.response.data.msg);  
+        })
     }
     catch(e){
         console.log(e);
@@ -32,10 +60,13 @@ export async function handleVerification(email : string , otp : string){
         const response = await axios.post<ApiResponse>("http://localhost:8454/api/auth/verify" , {
             email : email, 
             otp : otp
-        });
-        const message = response.data.msg;
-
-        console.log(message);
+        })
+        .then((response)=>{
+            console.log(response.data.msg)
+        })
+        .catch((e)=>{
+          console.log(e.response.data.msg);  
+        })
     } catch(e){
         console.log(e);
     }

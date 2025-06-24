@@ -1,46 +1,51 @@
 import { Request , Response , Router  , NextFunction, ErrorRequestHandler} from "express";
-import { checkUnique, createUser } from "../services/registration";
+import { checkAlreadyExistOrNot, createUser } from "../services/registration";
 import { generateOTPFunc, OTPVerifier, sendOtpEmail } from "../services/otpVerifier";
 import { redisClient } from "../config/db";
 import { checkJWT, createJWT } from "../services/JWT";
 const router = Router();
 
 export interface RegisterRequestBody {
-    username : string;
     publicKey : object;  //JWK format 
-    encryptedPrivateKey : string; 
-    passwordSalt : string;
-    mail : string;
+    email : string;
 }
 
 router.post('/register' , async (req: Request , res : Response) :  Promise<void> => {
-    const {username , publicKey , encryptedPrivateKey , passwordSalt , mail} = req.body as RegisterRequestBody;
+    const { publicKey , email} = req.body as RegisterRequestBody;
 
-    console.log("recieved registration request for username : " , username);
     console.log("the public key recieved is : " , publicKey);
-    console.log("the mail recieved is : " , mail);
+    console.log("the email recieved is : " , email);
 
-    if (!username || !publicKey || !encryptedPrivateKey || !passwordSalt) {
+    if ( !publicKey || !email) {
     res.status(400).json({ msg: 'Please enter all fields' });
     return;
   }
-  const check = await checkUnique(req.body.mail);
+  const check = await checkAlreadyExistOrNot(req.body.email);
   if(check){
-    await createUser(username , publicKey , encryptedPrivateKey , passwordSalt , mail);
+    await createUser( publicKey , email);
+    console.log("The user registration process has been completed!");
+    res.status(200).json({msg : "the user has been created you can now proceed to login"})
   }
   else{
+    console.log("the mail has been used previously cant register again ");
     res.status(400).json({msg : "this mail is already taken please sign up with another mail"});
+    return;
   }
   //we will check neon db for the username and if it doesnte exist we will create a new user and store 
   //all his data 
 
-  console.log("The user registration process has been completed!");
+  
 
 })
 
 
 router.post('/login' , async (req: Request , res : Response , next : NextFunction) :  Promise<void> =>{
     const {email} = req.body ;
+    const check = await checkAlreadyExistOrNot(req.body.email);
+    if(check){
+        res.status(400).json({msg : "no such user exists please try registering first"});
+        return;
+    }
     const otp = generateOTPFunc()
     if(!email){
       res.status(400).json({msg : "please enter the mail you want to login from , no mail recieved by the backend"})
@@ -58,6 +63,12 @@ router.post('/login' , async (req: Request , res : Response , next : NextFunctio
 
 
 router.post('/verify', async (req: Request, res: Response): Promise<void> => {
+  
+    const check = await checkAlreadyExistOrNot(req.body.email);
+    if(check){
+        res.status(400).json({msg : "no such user exists please try registering first"});
+        return;
+    }
     try {
         const { email, otp } = req.body;
         console.log(`Verification attempt for email: ${email} with OTP: ${otp}`);
