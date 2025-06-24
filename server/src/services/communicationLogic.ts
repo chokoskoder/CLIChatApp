@@ -1,7 +1,6 @@
 import { Server , Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import http from 'http';
-import { RedisClient } from "ioredis/built/connectors/SentinelConnector/types";
 import { redisClient } from "../config/db";
 
 // authentication is not perfect , it can be intercepted --> i think we need to use the IP addresses here so that people can't impersonate the user 
@@ -24,35 +23,35 @@ interface ChatMessagePayload {
 
 export function initializeWebSocketServer(server: http.Server) {
   const io = new Server(server, {
+    // THIS BLOCK IS CRUCIAL
     cors: {
-      origin: "*", // Adjust for production for security
-    },
+      origin: "*", // Allows connections from any origin
+      methods: ["GET", "POST"]
+    }
   });
+
 
   // --- Authentication Middleware ---
   // This runs for every new connecting socket, before the 'connection' event.
   io.use(async (socket: AuthenticatedSocket, next) => {
-    const token = socket.handshake.auth.token;
-
-    if (!token) {
-      return next(new Error('Authentication error: No token provided.'));
-    }
-
     try {
-      // 1. Verify the JWT
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-      const userId = decoded.userId;
-
-      // 2. Check if the session is active in Redis
-      const sessionStatus = await redisClient?.get(`session:${userId}`);
-      if (sessionStatus !== 'active') {
-        return next(new Error('Authentication error: Session not active or expired.'));
+      // Look for the token in the handshake headers
+      const authHeader = socket.handshake.headers.authorization;
+      console.log("we reached here");
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next(new Error('Authentication error: No token provided or malformed header.'));
       }
       
-      // 3. Attach userId to the socket object for use in other events
-      socket.userId = userId;
-      next(); // Proceed to the 'connection' event
+      // Extract the token from the "Bearer <token>" string
+      const token = authHeader.split(' ')[1];
+      console.log("we reached here part 2" );
 
+      // --- The rest of your logic remains exactly the same ---
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+      console.log("we reached here 3");
+      // ... etc.
+      next();
+      
     } catch (error) {
       return next(new Error('Authentication error: Invalid token.'));
     }
@@ -61,11 +60,13 @@ export function initializeWebSocketServer(server: http.Server) {
 
   // --- Main Connection Handler ---
   io.on('connection', (socket: AuthenticatedSocket) => {
+    console.log("reaching on connection part  \n \n \n")
     const userId = socket.userId!; // We know userId is attached by the middleware
     console.log(`User ${userId} connected with socket ID ${socket.id}`);
     
     // Store the mapping of userId to their socket.id
     onlineUsers.set(userId, socket.id);
+    console.log(userId , socket.id);
 
     // Send confirmation back to the client
     socket.emit('auth_success', { message: 'Authentication successful.' });

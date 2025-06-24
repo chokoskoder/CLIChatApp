@@ -1,8 +1,9 @@
 import axios from "axios";
 import { exportPublicKey, generateIdentityKeyPair } from "./encryption";
-import { protectKeys } from "./protectPassword";
+import { protectKeys } from "./protectInformation";
 interface ApiResponse {
     msg : string;
+    token :string;
 }
 interface ApiErrorResponse {
     msg : string;
@@ -35,6 +36,7 @@ export async function handleRegister(email : string ){
     }
 
 }
+
 export async function handleLogin(email : string){
     console.log("strating the log in process....");
     try{
@@ -42,7 +44,7 @@ export async function handleLogin(email : string){
         email : email
     })
         .then((response)=>{
-            console.log(response.data.msg)
+            console.log(response.data.msg , response.data.token)
         })
         .catch((e)=>{
           console.log(e.response.data.msg);  
@@ -77,7 +79,3 @@ export async function handleVerification(email : string , otp : string){
 
 
 }
-
-
-//now we need to learn how to slice all this shit up and then send it ahead to our backend in the form it is going to be read and also make sure
-//that we can ten call it and use it 

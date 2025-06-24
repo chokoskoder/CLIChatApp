@@ -21,7 +21,13 @@ export async function useProtectedPrivateKey(email : string) : Promise<CryptoKey
     const usablePrivateKey = await importPublicKey(unusablePrivateKey);
 
     return usablePrivateKey;
+}
 
+export async function protectJWTSignInKey(jwtPasskey : string) {
+    //store and save the json web token
+}
 
+export async function useProtectedJWTSignInKey(email : string) : Promise<string>{
 
+    //return the decoded key from here
 }

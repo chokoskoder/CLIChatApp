@@ -93,7 +93,7 @@ router.post('/verify', async (req: Request, res: Response): Promise<void> => {
             
             await redisClient?.del(`otp:${email}`);
             
-            res.status(200).json({ msg: "Verification successful!" });
+            res.status(200).json({ msg: "Verification successful!" , token : jwt }); //update the user client to have ability to read this jwt and then use it again when sending request for 
         } else {
             console.log(`OTP verification failed for ${email}`);
             

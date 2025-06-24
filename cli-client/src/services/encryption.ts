@@ -33,6 +33,7 @@ export async function exportPublicKey(key : CryptoKey) : Promise<JsonWebKey>{
     const exportedKey = await webcrypto.subtle.exportKey("jwk" , key);
     return exportedKey
 }
+
 /**
  * exports a cryptokey  , specifically here the public key , in a shareable format JSON 
  * this is sent to the server to store in the DB and shared whenever we want to create the shared secret which 

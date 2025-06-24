@@ -10,6 +10,14 @@ let rediss ;
 // const client = new Redis(REDIS)
 if(REDIS){
     rediss = new Redis(REDIS);
+    rediss.on('connect', () => {
+  console.log('✅ Successfully connected to Redis!');
+});
+
+// Listen for the 'error' event
+rediss.on('error', (err) => {
+  console.error('❌ Redis Client Error', err);
+});
 }
 else{
 
@@ -21,3 +29,4 @@ export const redisClient = rediss;
 // export function async checkDB() {
 
 // }
+
