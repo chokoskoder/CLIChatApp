@@ -2,13 +2,9 @@ import { Server , Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import http from 'http';
 import { redisClient } from "../config/db";
+import { userInfo } from "os";
 
 // authentication is not perfect , it can be intercepted --> i think we need to use the IP addresses here so that people can't impersonate the user 
-
-interface InboundPayload{
-    type : "auth" | "chat_message" | 'initiate_chat';
-    payload : any;
-}
 
 const onlineUsers = new Map<string , string>();
 
@@ -47,9 +43,11 @@ export function initializeWebSocketServer(server: http.Server) {
       console.log("we reached here part 2" );
 
       // --- The rest of your logic remains exactly the same ---
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { email : string };
       console.log("we reached here 3");
       // ... etc.
+      const userId = decoded.email;
+      socket.userId = userId;
       next();
       
     } catch (error) {
@@ -59,7 +57,7 @@ export function initializeWebSocketServer(server: http.Server) {
 
 
   // --- Main Connection Handler ---
-  io.on('connection', (socket: AuthenticatedSocket) => {
+  io.on('connection', (socket: AuthenticatedSocket ) => {
     console.log("reaching on connection part  \n \n \n")
     const userId = socket.userId!; // We know userId is attached by the middleware
     console.log(`User ${userId} connected with socket ID ${socket.id}`);
