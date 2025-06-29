@@ -17,17 +17,18 @@ export async function handleRegister(email : string ){
         //we need to put some kind of blocking here so that the user cant create keypairs again and again 
         const keyPair = await generateIdentityKeyPair(); // put this into if public key doesnt exist only then we make a new pair , but a user wont go through all the struggle to register again and again would he ?
         const  { privateKey , publicKey } =  keyPair;
-        const exportablePublicKey = exportPublicKey(publicKey);
+        const exportablePublicKey = await exportPublicKey(publicKey);
+        console.log("generated public key is  " , exportablePublicKey)
         const posting = await axios.post<ApiResponse>("http://localhost:8454/api/auth/register" , {
             email : email , 
             publicKey : exportablePublicKey
         })//we need to send a JSON  payload here with all the things we need while registering a user right ?
-        .then(async (response)=>{
+        .then(async (posting)=>{
             await protectKeys(keyPair , email);
-            console.log(response.data.msg)
+            console.log(posting.data.msg)
         })
         .catch((e)=>{
-          console.log(e.response.data.msg);  
+          console.log(e.posting.data.msg);  
         })
  
     }
@@ -38,7 +39,7 @@ export async function handleRegister(email : string ){
 }
 
 export async function handleLogin(email : string){
-    console.log("strating the log in process....");
+    console.log("starting the log in process....");
     try{
         const response = await axios.post<ApiResponse>("http://localhost:8454/api/auth/login" , {
         email : email

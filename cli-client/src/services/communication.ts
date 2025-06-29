@@ -12,7 +12,7 @@ export function connectWebSocket(token: string): ReturnType<typeof io>{
   
   const socket = io(API_BASE_URL, {
     extraHeaders: {
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}` 
     } 
   });
 
