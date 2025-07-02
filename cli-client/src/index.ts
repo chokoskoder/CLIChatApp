@@ -1,59 +1,87 @@
 import * as readline from 'readline';
 // Making sure the import path is correct for your project structure
 import { handleLogin, handleRegister, handleVerification } from './services/commands';
-import { connectWebSocket } from './services/communication';
+import { connectWebSocket, sendMessage } from './services/communication';
+import { Socket } from 'socket.io-client';
+
+
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-// Assuming handleVerification returns a Promise, e.g., Promise<void>
-// If it doesn't, the 'await' will have no effect.
-
+let currentMode: 'command' | 'chat' = 'command';
+let socket: Socket | null = null;
+let recipientID : string  ;
 console.log("Welcome to e2e-cli-tool! Type /help for commands.");
 
 rl.setPrompt('app> ');
 rl.prompt();
 
-// REPLACE your existing rl.on('line',...) with this entire block
-// =============================================================
-rl.on('line', async (line: string) => { // Added 'async'
-  const [command, ...args] = line.trim().split(' ');
-
-  try { // Added try...catch for robust error handling
-    switch (command) {
-      case '/register':
-        await handleRegister(args[0]);
-        break;
-      case '/login':
-        await handleLogin(args[0]);
-        break;
-      case '/verify':
-        await handleVerification(args[0], args[1]);
-        break; // Added the missing 'break'
-      case '/connect':
-        await connectWebSocket(args[0]);
-      case '/help':
-        console.log("Available commands: /register, /login, /verify <email> <otp>, /exit");
-        break;
-      case '/exit':
-        rl.close();
-        // Return here to avoid calling rl.prompt() from the finally block
-        return; 
-      default:
-        console.log(`Unknown command: '${command}'. Type /help for a list of commands.`);
-        break;
+rl.on('line', async (line: string) => {
+    const input = line.trim();
+    if (currentMode === 'chat') {
+        if (input === '/exit-chat') {
+            currentMode = 'command';
+            console.log("Exited chat mode. You are now in command mode.");
+            rl.setPrompt('app> ');
+        } else {
+            if (socket) {
+                console.log(recipientID)
+                sendMessage(socket, input , recipientID); // Send the line as a message
+            } else {
+                console.error("Error: Socket is not connected.");
+                currentMode = 'command'; // Revert to command mode
+                rl.setPrompt('app> ');
+            }
+        }
     }
-  } catch (error) {
-    // This will catch any errors from handleVerification or other commands
-    console.error("An error occurred while executing the command:", error);
-  } finally {
-    // This ensures the prompt is always shown after a command completes
-    rl.prompt();
-  }
+    else if (currentMode === 'command') {
+        const [command, ...args] = input.split(' ');
+        try {
+            switch (command) {
+                case '/register':
+                    await handleRegister(args[0]);
+                    break;
+                case '/login':
+                    const token = await handleLogin(args[0]);
+                    break;
+                case '/verify':
+                    await handleVerification(args[0], args[1]);
+                    break;
+                case '/connect':
+                    const authToken = args[0]; 
+                    socket = connectWebSocket(authToken);
+                    console.log("Connecting...");
+                    break;
+                case '/chat':
+                    if (socket && socket.connected) {
+                        recipientID = args[0];
+                        currentMode = 'chat';
+                        console.log("💬 Entered chat mode. Type '/exit-chat' to return to commands.");
+                        rl.setPrompt('chat> ');
+                    } else {
+                        console.log("You must be connected to start a chat. Use /connect first.");
+                    }
+                    break;
+                case '/help':
+                    console.log("Available commands: /register, /login, /verify, /connect, /chat, /exit");
+                    break;
+                case '/exit':
+                    rl.close();
+                    return;
+                default:
+                    console.log(`Unknown command: '${command}'. Type /help for commands.`);
+                    break;
+            }
+        } catch (error) {
+            console.error("An error occurred:", error);
+        }
+    }
+
+    rl.prompt(); 
 });
-// =============================================================
 
 rl.on('close', () => {
     console.log('Exiting the app. Hasta la Vista!');

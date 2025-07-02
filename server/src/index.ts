@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import router from "./api/auth";
 
-import { initializeWebSocketServer } from "./services/communicationLogic"; 
+import { initializeWebSocketServer } from "./api/websocket"; 
 import http from "http"; 
 
 dotenv.config();

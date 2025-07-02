@@ -1,9 +1,10 @@
-import { Socket } from "socket.io";
+import { Socket } from "socket.io-client";
 import io from "socket.io-client"
+import { string } from "zod";
 const API_BASE_URL = "http://localhost:8454"
 
 interface MySocket extends Socket{
-
+  socketID : string;
 }
 
 
@@ -17,7 +18,6 @@ export function connectWebSocket(token: string): ReturnType<typeof io>{
   });
 
 
-  // --- Standard Event Listeners ---
   socket.on('connect', () => {
     console.log(` Successfully connected to server with socket ID: ${socket.id}`);
   });
@@ -41,4 +41,25 @@ export function connectWebSocket(token: string): ReturnType<typeof io>{
   });
   
   return socket;
+}
+
+export function sendMessage(socket : Socket , message : string , recipientID : string) : void{
+  if (socket && socket.connected) {
+    try{
+      const payload = {
+        content : message ,
+        timestamp : new Date().toISOString(),
+        recipientId : recipientID,
+      }
+      socket.emit('chat_message' , payload);
+      console.log("message sent...");
+    }
+    catch(e){
+      console.error(e)
+    }
+  }
+  else {
+    console.log("the socket is not connected homie sorry ")
+  }
+
 }

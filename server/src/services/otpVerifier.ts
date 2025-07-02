@@ -40,7 +40,7 @@ export async function sendOtpEmail(email : string , otp : string){
 }
 
 export async function OTPVerifier(userOtp: string, generatedOtpPromise: Promise<string | null> | undefined): Promise<boolean> {
-  // Case 1: The promise was not even passed in (e.g., key was invalid before calling redis.get)
+  // Case 1 the promise was not even passed in (e.g., key was invalid before calling redis.get)
   if (!generatedOtpPromise) {
     console.log("Verification failed: No OTP promise was provided.");
     return false;
