@@ -3,6 +3,7 @@ import * as readline from 'readline';
 import { handleChat, handleLogin, handleRegister, handleVerification } from './services/commands';
 import { connectWebSocket, sendMessage } from './services/communication';
 import { Socket } from 'socket.io-client';
+import { useJWTSignInKey } from './services/protectInformation';
 
 
 
@@ -51,7 +52,7 @@ rl.on('line', async (line: string) => {
                     await handleVerification(args[0], args[1]);
                     break;
                 case '/connect':
-                    const authToken = args[0]; 
+                    const authToken = await useJWTSignInKey(); 
                     socket = connectWebSocket(authToken);
                     console.log("Connecting...");
                     break;

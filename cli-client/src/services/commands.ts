@@ -1,6 +1,6 @@
 import axios from "axios";
-import { exportPublicKey, generateIdentityKeyPair, importPublicKey } from "./encryption";
-import { protectKeys } from "./protectInformation";
+import { exportPublicKey, generateIdentityKeyPair} from "./encryption";
+import { protectJWTSignInKey, protectKeys } from "./protectInformation";
 import { storePublicKey } from "./storeData";
 interface ApiResponse {
     msg : string;
@@ -66,9 +66,9 @@ export async function handleVerification(email : string , otp : string){
             email : email, 
             otp : otp
         })
-        .then((response)=>{
+        .then(async (response)=>{
             console.log(response.data.msg)
-            console.log(response.data.token)
+            await protectJWTSignInKey(response.data.token);
         })
         .catch((e)=>{
           console.log(e.response.data.msg);  

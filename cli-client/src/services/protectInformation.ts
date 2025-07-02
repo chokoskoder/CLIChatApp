@@ -2,6 +2,7 @@ import keytar from 'keytar';
 import { exportPublicKey, importPublicKey } from './encryption';
 const KEYTAR_SERVICE = 'e2eCLIchatapp'
 const KEYTAR_ACCOUNT = 'user-identity'
+const KEYTAR_USER_JWT = 'jwt';
 
 
 export async function protectKeys(keyPair : CryptoKeyPair , email : string){
@@ -25,5 +26,11 @@ export async function useProtectedPrivateKey(email : string) : Promise<CryptoKey
 
 export async function protectJWTSignInKey(jwtPasskey : string) {
     //store and save the json web token
-    
+    await keytar.setPassword(KEYTAR_SERVICE , `${KEYTAR_USER_JWT}jwt` , jwtPasskey);
+}
+
+export async function useJWTSignInKey() : Promise<string> {
+    const jwt = await keytar.getPassword(KEYTAR_SERVICE , `${KEYTAR_USER_JWT}jwt`);
+    const cooked = "homie your jwt is not saved yet try again "
+    return jwt ? jwt : cooked ;
 }
