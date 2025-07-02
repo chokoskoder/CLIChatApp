@@ -4,6 +4,7 @@ import router from "./api/auth";
 
 import { initializeWebSocketServer } from "./api/websocket"; 
 import http from "http"; 
+import communicationRouter from "./api/communicationSafety";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ initializeWebSocketServer(httpServer)
 
 // Set up your API routes on the express app
 app.use('/api/auth' , router); 
+app.use('/api/comms' , communicationRouter);
 
 // START THE CORRECT SERVER
 httpServer.listen(PORT , ()=>{

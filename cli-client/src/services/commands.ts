@@ -1,6 +1,7 @@
 import axios from "axios";
-import { exportPublicKey, generateIdentityKeyPair } from "./encryption";
+import { exportPublicKey, generateIdentityKeyPair, importPublicKey } from "./encryption";
 import { protectKeys } from "./protectInformation";
+import { storePublicKey } from "./storeData";
 interface ApiResponse {
     msg : string;
     token :string;
@@ -67,6 +68,7 @@ export async function handleVerification(email : string , otp : string){
         })
         .then((response)=>{
             console.log(response.data.msg)
+            console.log(response.data.token)
         })
         .catch((e)=>{
           console.log(e.response.data.msg);  
@@ -79,17 +81,16 @@ export async function handleVerification(email : string , otp : string){
 
 }
 
-export async function handleChat(recipientID : string){
-    console.log("pulling the public key from the db.....")
+export async function handleChat(recipientID : string)  { // /chat email 
+    console.log("pulling the public key of the recipient from the db.....")
     try{
         console.log("we are here");
         const recipientPublicKey = await axios.post<ApiResponse>("http://localhost:8454/api/comms/getpublickey" , {
             email : recipientID
         })
-        .then((e)=>{
+        .then( async (e)=>{
             console.log("we are here for the message ");
-            console.log(e.data.token)
-            
+            storePublicKey(recipientID , e.data.token)
         })
         .catch((e)=>{
             console.log("we are here for the error");

@@ -17,7 +17,7 @@ interface AuthenticatedSocket extends Socket {
 interface ChatMessagePayload {
   content : string;
   timestamp : string;
-  recipientID : string;
+  recipientId : string;
 }
 
 export function initializeWebSocketServer(server: http.Server) {
@@ -66,8 +66,8 @@ export function initializeWebSocketServer(server: http.Server) {
     socket.emit('auth_success', { message: 'Authentication successful.' });
 
     socket.on('chat_message', (payload: ChatMessagePayload) => {
-      const {content , timestamp , recipientID} = payload
-      const recipientId = recipientID
+      const {content , timestamp , recipientId} = payload
+      console.log(payload)
       const recipientSocketId = onlineUsers.get(recipientId);
 
       if (recipientSocketId) {

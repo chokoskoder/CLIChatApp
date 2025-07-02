@@ -11,7 +11,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@types/config": "^3.3.5",
     "axios": "^1.10.0",
+    "conf": "^7.1.2",
     "keytar": "^7.9.0",
     "nodemailer": "^7.0.3",
     "socket.io": "^4.8.1",

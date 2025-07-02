@@ -4,7 +4,7 @@
 
 import { prisma } from "../config/db";
 
-async function getPublicKey(email : string) : Promise<string> {
+export async function getPublicKey(email : string) : Promise<string> {
     try{
             const user = await prisma.user.findUnique({
         where: {
