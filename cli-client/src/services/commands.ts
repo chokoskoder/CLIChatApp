@@ -5,9 +5,7 @@ interface ApiResponse {
     msg : string;
     token :string;
 }
-interface ApiErrorResponse {
-    msg : string;
-}
+
 
 
 export async function handleRegister(email : string ){
@@ -45,7 +43,7 @@ export async function handleLogin(email : string){
         email : email
     })
         .then((response)=>{
-            console.log(response.data.msg , response.data.token)
+            console.log(response.data.msg)
         })
         .catch((e)=>{
           console.log(e.response.data.msg);  
@@ -79,4 +77,26 @@ export async function handleVerification(email : string , otp : string){
 
 
 
+}
+
+export async function handleChat(recipientID : string){
+    console.log("pulling the public key from the db.....")
+    try{
+        console.log("we are here");
+        const recipientPublicKey = await axios.post<ApiResponse>("http://localhost:8454/api/comms/getpublickey" , {
+            email : recipientID
+        })
+        .then((e)=>{
+            console.log("we are here for the message ");
+            console.log(e.data.token)
+            
+        })
+        .catch((e)=>{
+            console.log("we are here for the error");
+            console.log(e.data.msg)
+        })
+    }
+    catch(e){
+        console.log(`we are facing an error ${e}`);
+    }
 }

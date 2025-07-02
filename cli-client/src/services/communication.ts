@@ -1,10 +1,12 @@
 import { Socket } from "socket.io-client";
 import io from "socket.io-client"
-import { string } from "zod";
+import axios from 'axios'
 const API_BASE_URL = "http://localhost:8454"
 
-interface MySocket extends Socket{
-  socketID : string;
+
+interface ApiResponse{
+  publicKey : string;
+  msg : string;
 }
 
 
@@ -43,7 +45,7 @@ export function connectWebSocket(token: string): ReturnType<typeof io>{
   return socket;
 }
 
-export function sendMessage(socket : Socket , message : string , recipientID : string) : void{
+export  async function sendMessage(socket : Socket , message : string , recipientID : string) : Promise<void>{
   if (socket && socket.connected) {
     try{
       const payload = {
@@ -51,6 +53,7 @@ export function sendMessage(socket : Socket , message : string , recipientID : s
         timestamp : new Date().toISOString(),
         recipientId : recipientID,
       }
+
       socket.emit('chat_message' , payload);
       console.log("message sent...");
     }

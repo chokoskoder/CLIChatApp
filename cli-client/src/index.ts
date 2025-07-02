@@ -1,6 +1,6 @@
 import * as readline from 'readline';
 // Making sure the import path is correct for your project structure
-import { handleLogin, handleRegister, handleVerification } from './services/commands';
+import { handleChat, handleLogin, handleRegister, handleVerification } from './services/commands';
 import { connectWebSocket, sendMessage } from './services/communication';
 import { Socket } from 'socket.io-client';
 
@@ -59,8 +59,9 @@ rl.on('line', async (line: string) => {
                     if (socket && socket.connected) {
                         recipientID = args[0];
                         currentMode = 'chat';
+                        handleChat(recipientID);
                         console.log("💬 Entered chat mode. Type '/exit-chat' to return to commands.");
-                        rl.setPrompt('chat> ');
+                        //rl.setPrompt('chat> ');
                     } else {
                         console.log("You must be connected to start a chat. Use /connect first.");
                     }
