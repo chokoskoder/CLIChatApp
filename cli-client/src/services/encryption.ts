@@ -17,21 +17,38 @@ export async function generateIdentityKeyPair() : Promise<CryptoKeyPair>{
     return keyPair;
 }
 
-export async function importPublicKey(key : JsonWebKey) : Promise<CryptoKey> {
-    const privateKey = await webcrypto.subtle.importKey(
-        "jwk",
-        key , 
-        {name : "ECDH" ,  namedCurve : "P-256"},
-        true , 
-        ["deriveKey"]
-    )
-    return privateKey;
+export async function importPublicKey(key: JsonWebKey): Promise<CryptoKey> {
+    try {
+        // The key being imported is a public key
+        const publicKey = await webcrypto.subtle.importKey(
+            "jwk",
+            key,
+            { name: "ECDH", namedCurve: "P-256" },
+            true,
+            [] 
+        );
+        return publicKey;
+    } catch (error) {
+        console.error("🔴 Failed to import public key:", error);
+        
+        throw new Error("Could not import the provided public key.");
+    }
 }
-
 
 export async function exportPublicKey(key : CryptoKey) : Promise<JsonWebKey>{
     const exportedKey = await webcrypto.subtle.exportKey("jwk" , key);
     return exportedKey
+}
+
+export async function importPrivateKey(key: JsonWebKey): Promise<CryptoKey> {
+    const privateKey = await webcrypto.subtle.importKey(
+        "jwk",
+        key,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveKey"] // <-- This is the required usage for a private key to create a shared secret
+    );
+    return privateKey;
 }
 
 /**
@@ -90,4 +107,17 @@ export async function decryptMessage(ciphertext : ArrayBuffer ,  iv : Uint8Array
     );
 
     return ab2str(decryptBuffer);
+}
+
+export async function importSharedSecret(keyJwk: JsonWebKey): Promise<CryptoKey> {
+    const sharedSecretKey = await webcrypto.subtle.importKey(
+        "jwk",
+        keyJwk,
+        {
+            name: "AES-GCM", // The algorithm this key is for
+        },
+        true, // The key must have been extractable
+        ["encrypt", "decrypt"] // The usages it was created for
+    );
+    return sharedSecretKey;
 }

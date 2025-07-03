@@ -90,6 +90,7 @@ export async function handleChat(recipientID : string)  { // /chat email
         })
         .then( async (e)=>{
             console.log("we are here for the message ");
+            console.log(e.data.token);
             storePublicKey(recipientID , e.data.token)
         })
         .catch((e)=>{

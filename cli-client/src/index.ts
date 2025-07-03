@@ -61,6 +61,7 @@ rl.on('line', async (line: string) => {
                         recipientID = args[0];
                         currentMode = 'chat';
                         //now we need to call the function to create the shared secret 
+                        handleChat(recipientID);
                         console.log("💬 Entered chat mode. Type '/exit-chat' to return to commands.");
                         //rl.setPrompt('chat> ');
                     } else {

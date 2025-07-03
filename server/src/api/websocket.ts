@@ -18,6 +18,7 @@ interface ChatMessagePayload {
   content : string;
   timestamp : string;
   recipientId : string;
+  iv : Uint8Array;
 }
 
 export function initializeWebSocketServer(server: http.Server) {
@@ -66,7 +67,7 @@ export function initializeWebSocketServer(server: http.Server) {
     socket.emit('auth_success', { message: 'Authentication successful.' });
 
     socket.on('chat_message', (payload: ChatMessagePayload) => {
-      const {content , timestamp , recipientId} = payload
+      const {content , timestamp , recipientId , iv} = payload
       console.log(payload)
       const recipientSocketId = onlineUsers.get(recipientId);
 
@@ -76,6 +77,7 @@ export function initializeWebSocketServer(server: http.Server) {
         const messageToSend = {
           senderId: userId,
           encryptedMessage: payload.content,
+          iv : iv
         };
         io.to(recipientSocketId).emit('incoming_message', messageToSend);
 
