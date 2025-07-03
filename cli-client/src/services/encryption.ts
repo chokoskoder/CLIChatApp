@@ -1,3 +1,4 @@
+import { copyFileSync } from "fs";
 import { str2ab , ab2str } from "../utils/utils";
 
 import { getRandomValues, webcrypto } from "crypto";
@@ -41,15 +42,25 @@ export async function exportPublicKey(key : CryptoKey) : Promise<JsonWebKey>{
 }
 
 export async function importPrivateKey(key: JsonWebKey): Promise<CryptoKey> {
-    const privateKey = await webcrypto.subtle.importKey(
-        "jwk",
-        key,
-        { name: "ECDH", namedCurve: "P-256" },
-        true,
-        ["deriveKey"] // <-- This is the required usage for a private key to create a shared secret
-    );
-    return privateKey;
+    try {
+        // Log the key to check its structure
+        console.log("importPrivateKey - Key to import:", key);
+
+        const privateKey = await webcrypto.subtle.importKey(
+            "jwk",               // Key format (expecting JWK)
+            key,                 // The JWK to import
+            { name: "ECDH", namedCurve: "P-256" }, // Algorithm
+            true,                // extractable
+            ["deriveKey"]        // Usage: "deriveKey" is used to generate shared secrets
+        );
+        return privateKey;
+    } catch (e) {
+        // Log the error to capture more details
+        console.error("Error during key import:", e);
+        throw new Error("showin just above");
+    }
 }
+
 
 /**
  * exports a cryptokey  , specifically here the public key , in a shareable format JSON 
@@ -59,25 +70,36 @@ export async function importPrivateKey(key: JsonWebKey): Promise<CryptoKey> {
  * @returns {promise<JsonWebKey>} just as talked above nothing new
  */
 
-export async function deriveSharedSecret(myPrivateKey : CryptoKey , theirPublicKey : CryptoKey) : Promise<CryptoKey> {
-    console.log("creating a shared secret so that you can your homie chat...");
-    const sharedSecret = await webcrypto.subtle.deriveKey(
-        {
-            name : "ECDH",  
-            //namedCurve : "P-256",                //this explains which algo we used to  create the key pair 
-            public : theirPublicKey,
-        },
-        myPrivateKey,
-        {
-            name : "AES-GCM",               //this is used to create a symmetrical key , unlike the one created by ECDH
-                                            //this is in itself a huge topic to go into 
-            length : 256,
-        },
-        true,
-        ["encrypt" , "decrypt"]
-    );
-    console.log("shared key derived successfully you can chat now !");
-    return sharedSecret;
+export async function deriveSharedSecret(myPrivateKey: CryptoKey, theirPublicKey: CryptoKey): Promise<CryptoKey> {
+    console.log("Creating a shared secret so that you and your homie can chat...");
+
+    // Log the types of the keys for debugging
+    console.log("My Private Key Type:", myPrivateKey.type); // should be 'private'
+    console.log("Their Public Key Type:", theirPublicKey.type); // should be 'public'
+
+    try {
+        // Derive shared secret using ECDH
+        const sharedSecret = await webcrypto.subtle.deriveKey(
+            {
+                name: "ECDH",  
+                public: theirPublicKey,  // Their public key
+            },
+            myPrivateKey,  // My private key
+            {
+                name: "AES-GCM",  // Algorithm for the derived key (AES for encryption)
+                length: 256,  // AES key length
+            },
+            true,  // extractable (so we can use it later)
+            ["encrypt", "decrypt"]  // Key usages
+        );
+
+        console.log("Shared key derived successfully! You can chat now!");
+        console.log("Shared Secret (AES Key):", sharedSecret);  // Log the derived shared secret
+        return sharedSecret;
+    } catch (error) {
+        console.error("Error deriving shared secret:", error);
+        throw error;
+    }
 }
 
 export async function encryptMessage(plaintext : string , sharedSecret : CryptoKey) : Promise<{ciphertext : ArrayBuffer , iv : Uint8Array}>{
@@ -109,15 +131,26 @@ export async function decryptMessage(ciphertext : ArrayBuffer ,  iv : Uint8Array
     return ab2str(decryptBuffer);
 }
 
-export async function importSharedSecret(keyJwk: JsonWebKey): Promise<CryptoKey> {
-    const sharedSecretKey = await webcrypto.subtle.importKey(
-        "jwk",
-        keyJwk,
-        {
-            name: "AES-GCM", // The algorithm this key is for
-        },
-        true, // The key must have been extractable
-        ["encrypt", "decrypt"] // The usages it was created for
-    );
-    return sharedSecretKey;
+export async function importSharedSecret(sharedSecret: CryptoKey): Promise<CryptoKey> {
+    try {
+        // Export the shared secret to JWK format
+        const exportedSharedSecret = await webcrypto.subtle.exportKey("jwk", sharedSecret);
+
+        // Log the exported shared secret to verify the "kty" field
+        console.log("Exported Shared Secret:", exportedSharedSecret);
+
+        // Now import it back with the correct kty for AES (symmetric key)
+        const importedSecret = await webcrypto.subtle.importKey(
+            "jwk",
+            exportedSharedSecret,
+            { name: "AES-GCM", length: 256 },  // AES with 256-bit key
+            true,  // extractable (so you can use it later)
+            ["encrypt", "decrypt"]  // Usages for symmetric encryption
+        );
+
+        return importedSecret;
+    } catch (error) {
+        console.error("Error importing shared secret:", error);
+        throw new Error("Failed to use shared secret.");
+    }
 }

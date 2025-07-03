@@ -59,10 +59,11 @@ export function connectWebSocket(token: string): ReturnType<typeof io>{
 
 async function createSharedSecret(recipientID : string) {
   const publicKey = await usePublicKey(recipientID);
-  console.log(publicKey)
+  console.log(publicKey , "this public key was picked up from the sendMessage file");
   const privateKey = await useProtectedPrivateKey('chokoskoder@gmail.com');
-  console.log(privateKey)
-  const sharedSecret = await deriveSharedSecret(publicKey , privateKey)
+  console.log(privateKey , "this public key was picked up from the sendMessage file");
+  const sharedSecret = await deriveSharedSecret( privateKey , publicKey)
+  console.log("this is the shared secret that we have derived :: " , sharedSecret)
   await protectSharedSecret(sharedSecret , recipientID);
 
 }
@@ -74,6 +75,7 @@ export  async function sendMessage(socket : Socket , message : string , recipien
       //call the public key of the recipient as we stored and the private key 
       console.log("we are here")
       await createSharedSecret(recipientID);
+      console.log("we have derived the shared secret baby \n \n")
       const sharedSecret = await useSharedSecret(recipientID);
       const { ciphertext , iv} = await encryptMessage(message , sharedSecret)
       const payload = {
